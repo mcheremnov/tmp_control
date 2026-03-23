@@ -1,0 +1,597 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temp Control Wiring Diagram</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            –bg: #0a0e1a;
+            –panel: #0f1628;
+            –border: #1e3a5f;
+            –accent: #00d4ff;
+            –green: #00ff88;
+            –orange: #ff8c00;
+            –red: #ff3366;
+            –yellow: #ffd700;
+            –purple: #a855f7;
+            –wire-power: #ff4444;
+            –wire-gnd: #333;
+            –wire-data: #00d4ff;
+            –wire-pwm: #ff8c00;
+            –wire-i2c: #a855f7;
+            –text: #c8d8e8;
+            –dim: #4a6080;
+        }
+
+        - {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(–bg);
+            color: var(–text);
+            font-family: ‘Share Tech Mono’, monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Scanline overlay */
+        body::before {
+            content: ‘’;
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 2px,
+                    rgba(0, 0, 0, 0.03) 4px);
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        header {
+            text-align: center;
+            padding: 24px 20px 16px;
+            border-bottom: 1px solid var(–border);
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.05) 0%, transparent 100%);
+        }
+
+        header h1 {
+            font-family: ‘Orbitron’, monospace;
+            font-size: clamp(14px, 3vw, 22px);
+            font-weight: 900;
+            color: var(–accent);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        header p {
+            font-size: 11px;
+            color: var(–dim);
+            letter-spacing: 2px;
+            margin-top: 6px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(–border);
+            background: var(–panel);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(–dim);
+        }
+
+        .legend-line {
+            width: 28px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .diagram-wrapper {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            max-width: 960px;
+            height: auto;
+            filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.08));
+        }
+
+        /* Component boxes */
+        .comp-box {
+            fill: var(–panel);
+            stroke: var(–border);
+            stroke-width: 1.5;
+            rx: 6;
+        }
+
+        .comp-box.mcu {
+            stroke: var(–accent);
+            stroke-width: 2;
+        }
+
+        .comp-box.sensor-out {
+            stroke: var(–green);
+        }
+
+        .comp-box.sensor-in {
+            stroke: var(–yellow);
+        }
+
+        .comp-box.valve {
+            stroke: var(–orange);
+        }
+
+        .comp-box.oled {
+            stroke: var(–purple);
+        }
+
+        .comp-box.power {
+            stroke: var(–red);
+        }
+
+        /* Labels */
+        .comp-title {
+            font-family: ‘Orbitron’, monospace;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            fill: var(–accent);
+        }
+
+        .comp-title.green {
+            fill: var(–green);
+        }
+
+        .comp-title.yellow {
+            fill: var(–yellow);
+        }
+
+        .comp-title.orange {
+            fill: var(–orange);
+        }
+
+        .comp-title.purple {
+            fill: var(–purple);
+        }
+
+        .comp-title.red {
+            fill: var(–red);
+        }
+
+        .comp-sub {
+            font-family: ‘Share Tech Mono’, monospace;
+            font-size: 8px;
+            fill: var(–dim);
+        }
+
+        .pin-label {
+            font-family: ‘Share Tech Mono’, monospace;
+            font-size: 7.5px;
+            fill: var(–text);
+        }
+
+        .pin-dot {
+            fill: var(–text);
+        }
+
+        /* Wires */
+        .wire {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .wire-power {
+            stroke: var(–wire-power);
+        }
+
+        .wire-gnd {
+            stroke: #555;
+        }
+
+        .wire-data {
+            stroke: var(–wire-data);
+        }
+
+        .wire-pwm {
+            stroke: var(–wire-pwm);
+        }
+
+        .wire-i2c-sda {
+            stroke: var(–purple);
+        }
+
+        .wire-i2c-scl {
+            stroke: #d070ff;
+        }
+
+        /* Dashed optional wires */
+        .wire-opt {
+            stroke-dasharray: 5, 3;
+            opacity: 0.6;
+        }
+
+        .glow-text {
+            font-family: ‘Share Tech Mono’, monospace;
+            font-size: 8px;
+            fill: var(–dim);
+        }
+
+        .voltage-badge {
+            font-family: ‘Orbitron’, monospace;
+            font-size: 7px;
+            font-weight: 700;
+        }
+
+        .note-box {
+            fill: rgba(0, 212, 255, 0.04);
+            stroke: rgba(0, 212, 255, 0.2);
+            stroke-width: 1;
+            rx: 4;
+        }
+
+        .note-text {
+            font-family: ‘Share Tech Mono’, monospace;
+            font-size: 7.5px;
+            fill: var(–dim);
+        }
+
+        .note-title {
+            font-family: ‘Orbitron’, monospace;
+            font-size: 7px;
+            font-weight: 700;
+            fill: var(–accent);
+            letter-spacing: 1px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header>
+        <h1>Temperature Control System — Wiring Diagram</h1>
+        <p>ESP32 · DS18B20 · DHT22 · Motorized Valve · OLED Display</p>
+    </header>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-line" style="background:#ff4444"></div>3.3V / 5V Power
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background:#555"></div>GND
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background:#00d4ff"></div>Data (1-Wire / Digital)
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background:#ff8c00"></div>PWM Signal
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background:#a855f7"></div>I2C SDA
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background:#d070ff"></div>I2C SCL
+        </div>
+        <div class="legend-item">
+            <div class="legend-line" style="background:#00d4ff; opacity:0.5"></div>Optional
+        </div>
+    </div>
+
+    <div class="diagram-wrapper">
+        <svg viewBox="0 0 960 620" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L6,3 z" fill="var(--dim)" />
+                </marker>
+                <!-- Grid dots background -->
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="0.8" fill="rgba(30,58,95,0.4)" />
+                </pattern>
+            </defs>
+
+            <!-- Grid background -->
+
+            <rect width="960" height="620" fill="url(#grid)" />
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- ESP32 MCU — Center -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="350" y="200" width="260" height="220" rx="6" class="comp-box mcu" />
+            <!-- MCU glow -->
+            <rect x="350" y="200" width="260" height="220" rx="6" fill="none" stroke="rgba(0,212,255,0.15)"
+                stroke-width="8" />
+
+            <text x="480" y="220" text-anchor="middle" class="comp-title">ESP32</text>
+            <text x="480" y="233" text-anchor="middle" class="comp-sub">DEVKIT V1 • 38-PIN</text>
+
+            <!-- Divider line -->
+
+            <line x1="360" y1="240" x2="600" y2="240" stroke="var(--border)" stroke-width="1" />
+
+            <!-- Left side pins (outputs to sensors) -->
+
+            <text x="366" y="258" class="pin-label">GPIO 4</text>
+            <text x="366" y="275" class="pin-label">GPIO 15</text>
+            <text x="366" y="292" class="pin-label">GPIO 18</text>
+            <text x="366" y="309" class="pin-label">GPIO 21</text>
+            <text x="366" y="326" class="pin-label">GPIO 22</text>
+            <text x="366" y="360" class="pin-label">3.3V</text>
+            <text x="366" y="380" class="pin-label">3.3V</text>
+            <text x="366" y="400" class="pin-label">GND</text>
+
+            <!-- Pin dots left -->
+
+            <circle cx="350" cy="254" r="3.5" class="pin-dot" />
+            <circle cx="350" cy="271" r="3.5" class="pin-dot" />
+            <circle cx="350" cy="288" r="3.5" class="pin-dot" />
+            <circle cx="350" cy="305" r="3.5" class="pin-dot" />
+            <circle cx="350" cy="322" r="3.5" class="pin-dot" />
+            <circle cx="350" cy="356" r="3.5" fill="#ff4444" />
+            <circle cx="350" cy="376" r="3.5" fill="#ff4444" />
+            <circle cx="350" cy="396" r="3.5" fill="#555" />
+
+            <!-- Right side pins -->
+
+            <text x="545" y="258" class="pin-label" text-anchor="end">GPIO 32</text>
+            <text x="545" y="275" class="pin-label" text-anchor="end">GND</text>
+            <text x="545" y="292" class="pin-label" text-anchor="end">5V (VIN)</text>
+            <text x="545" y="360" class="pin-label" text-anchor="end">GPIO 19 (PWM)</text>
+
+            <!-- Pin dots right -->
+
+            <circle cx="610" cy="254" r="3.5" class="pin-dot" />
+            <circle cx="610" cy="271" r="3.5" fill="#555" />
+            <circle cx="610" cy="288" r="3.5" fill="#ff4444" />
+            <circle cx="610" cy="356" r="3.5" class="pin-dot" />
+
+            <!-- Pin functions (right of label) -->
+
+            <text x="367" y="258" class="glow-text" dy="0">← 1-Wire</text>
+            <text x="367" y="275" class="glow-text">← DHT22</text>
+            <text x="367" y="292" class="glow-text">← SDA</text>
+            <text x="367" y="309" class="glow-text">← SCL</text>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- DS18B20 — Outdoor Sensor (top-left) -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="30" y="60" width="170" height="110" rx="6" class="comp-box sensor-out" />
+            <text x="115" y="82" text-anchor="middle" class="comp-title green">DS18B20</text>
+            <text x="115" y="95" text-anchor="middle" class="comp-sub">OUTDOOR TEMP SENSOR</text>
+            <text x="115" y="107" text-anchor="middle" class="comp-sub">Waterproof • 1-Wire</text>
+            <line x1="40" y1="112" x2="190" y2="112" stroke="var(--border)" stroke-width="1" />
+
+            <text x="45" y="128" class="pin-label">VCC (Red)</text>
+            <text x="45" y="144" class="pin-label">DATA (Yellow)</text>
+            <text x="45" y="160" class="pin-label">GND (Black)</text>
+            <circle cx="200" cy="124" r="3.5" fill="#ff4444" />
+            <circle cx="200" cy="140" r="3.5" class="pin-dot" />
+            <circle cx="200" cy="156" r="3.5" fill="#555" />
+
+            <!-- 4.7kΩ pullup note -->
+
+            <rect x="215" y="128" width="80" height="22" rx="3" fill="rgba(0,255,136,0.07)" stroke="rgba(0,255,136,0.3)"
+                stroke-width="1" />
+            <text x="255" y="140" text-anchor="middle" class="glow-text" fill="var(--green)" font-size="8">4.7kΩ
+                PULLUP</text>
+            <text x="255" y="148" text-anchor="middle" class="glow-text" fill="var(--green)" font-size="7">DATA →
+                3.3V</text>
+
+            <!-- DS18B20 Wires -->
+
+            <!-- VCC -->
+
+            <path d="M200,124 L300,124 L300,356 L350,356" class="wire wire-power" />
+            <!-- DATA -->
+            <path d="M200,140 L310,140 L310,254 L350,254" class="wire wire-data" />
+            <!-- GND -->
+            <path d="M200,156 L320,156 L320,396 L350,396" class="wire wire-gnd" />
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- DHT22 — Indoor Sensor (bottom-left) -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="30" y="340" width="170" height="120" rx="6" class="comp-box sensor-in" />
+            <text x="115" y="362" text-anchor="middle" class="comp-title yellow">DHT22</text>
+            <text x="115" y="375" text-anchor="middle" class="comp-sub">INDOOR TEMP + HUMIDITY</text>
+            <line x1="40" y1="382" x2="190" y2="382" stroke="var(--border)" stroke-width="1" />
+
+            <text x="45" y="396" class="pin-label">VCC (Pin 1)</text>
+            <text x="45" y="412" class="pin-label">DATA (Pin 2)</text>
+            <text x="45" y="428" class="pin-label">N/C (Pin 3)</text>
+            <text x="45" y="444" class="pin-label">GND (Pin 4)</text>
+            <circle cx="200" cy="392" r="3.5" fill="#ff4444" />
+            <circle cx="200" cy="408" r="3.5" class="pin-dot" />
+            <circle cx="200" cy="440" r="3.5" fill="#555" />
+
+            <!-- DHT22 pullup note -->
+
+            <rect x="215" y="396" width="80" height="22" rx="3" fill="rgba(255,215,0,0.07)" stroke="rgba(255,215,0,0.3)"
+                stroke-width="1" />
+            <text x="255" y="408" text-anchor="middle" class="glow-text" fill="var(--yellow)" font-size="8">10kΩ
+                PULLUP</text>
+            <text x="255" y="416" text-anchor="middle" class="glow-text" fill="var(--yellow)" font-size="7">DATA →
+                3.3V</text>
+
+            <!-- DHT22 Wires -->
+
+            <!-- VCC -->
+
+            <path d="M200,392 L306,392 L306,376 L350,376" class="wire wire-power" />
+            <!-- DATA -->
+            <path d="M200,408 L314,408 L314,271 L350,271" class="wire wire-data" />
+            <!-- GND -->
+            <path d="M200,440 L322,440 L322,396" class="wire wire-gnd" />
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- OLED Display — Top Right -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="760" y="60" width="170" height="120" rx="6" class="comp-box oled" />
+            <text x="845" y="82" text-anchor="middle" class="comp-title purple">SSD1306 OLED</text>
+            <text x="845" y="95" text-anchor="middle" class="comp-sub">0.96" • 128×64 • I2C</text>
+            <line x1="770" y1="102" x2="920" y2="102" stroke="var(--border)" stroke-width="1" />
+
+            <text x="920" y="118" text-anchor="end" class="pin-label">VCC</text>
+            <text x="920" y="134" text-anchor="end" class="pin-label">GND</text>
+            <text x="920" y="150" text-anchor="end" class="pin-label">SDA</text>
+            <text x="920" y="166" text-anchor="end" class="pin-label">SCL</text>
+            <circle cx="760" cy="114" r="3.5" fill="#ff4444" />
+            <circle cx="760" cy="130" r="3.5" fill="#555" />
+            <circle cx="760" cy="146" r="3.5" class="pin-dot" />
+            <circle cx="760" cy="162" r="3.5" class="pin-dot" />
+
+            <!-- OLED Wires -->
+
+            <!-- VCC 3.3V -->
+
+            <path d="M760,114 L680,114 L680,356 L610,356" class="wire wire-power wire-opt" />
+            <!-- GND -->
+            <path d="M760,130 L685,130 L685,271 L610,271" class="wire wire-gnd wire-opt" />
+            <!-- SDA GPIO21 -->
+            <path d="M760,146 L690,146 L690,288 L610,288" class="wire wire-i2c-sda wire-opt" />
+            <!-- SCL GPIO22 -->
+            <path d="M760,162 L695,162 L695,305 L610,305" class="wire wire-i2c-scl wire-opt" />
+
+            <!-- Optional label -->
+
+            <text x="720" y="85" text-anchor="middle" class="note-title" fill="var(--purple)">OPTIONAL</text>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- Motorized Valve — Bottom Right -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="760" y="340" width="170" height="150" rx="6" class="comp-box valve" />
+            <text x="845" y="362" text-anchor="middle" class="comp-title orange">MOTORIZED VALVE</text>
+            <text x="845" y="375" text-anchor="middle" class="comp-sub">12V Ball Valve • PWM</text>
+            <line x1="770" y1="382" x2="920" y2="382" stroke="var(--border)" stroke-width="1" />
+
+            <text x="920" y="398" text-anchor="end" class="pin-label">12V+</text>
+            <text x="920" y="414" text-anchor="end" class="pin-label">GND</text>
+            <text x="920" y="430" text-anchor="end" class="pin-label">PWM Signal</text>
+            <circle cx="760" cy="394" r="3.5" fill="#ff4444" />
+            <circle cx="760" cy="410" r="3.5" fill="#555" />
+            <circle cx="760" cy="426" r="3.5" class="pin-dot" />
+
+            <!-- MOSFET block inline -->
+
+            <rect x="610" y="380" width="100" height="60" rx="4" fill="rgba(255,140,0,0.08)"
+                stroke="rgba(255,140,0,0.4)" stroke-width="1.5" />
+            <text x="660" y="400" text-anchor="middle" class="comp-title orange" font-size="8">MOSFET</text>
+            <text x="660" y="413" text-anchor="middle" class="comp-sub">IRLZ44N</text>
+            <text x="660" y="426" text-anchor="middle" class="comp-sub">Gate · Drain · Source</text>
+            <text x="660" y="436" text-anchor="middle" class="comp-sub">+ Flyback Diode</text>
+
+            <circle cx="610" cy="394" r="3.5" fill="#ff4444" />
+            <circle cx="610" cy="410" r="3.5" fill="#555" />
+            <circle cx="610" cy="426" r="3.5" class="pin-dot" />
+            <circle cx="710" cy="394" r="3.5" fill="#ff4444" />
+            <circle cx="710" cy="410" r="3.5" fill="#555" />
+            <circle cx="710" cy="426" r="3.5" class="pin-dot" />
+
+            <!-- MOSFET → Valve wires -->
+
+            <path d="M710,394 L760,394" class="wire wire-power" />
+            <path d="M710,410 L760,410" class="wire wire-gnd" />
+            <path d="M710,426 L760,426" class="wire wire-pwm" />
+
+            <!-- ESP32 PWM → MOSFET Gate -->
+
+            <path d="M610,356 L640,356 L640,375 L650,380" class="wire wire-pwm" />
+
+            <!-- 12V PSU → Valve -->
+
+            <!-- power supply block -->
+
+            <rect x="660" y="480" width="120" height="50" rx="4" fill="rgba(255,68,68,0.08)"
+                stroke="rgba(255,68,68,0.35)" stroke-width="1.5" />
+            <text x="720" y="500" text-anchor="middle" class="comp-title red" font-size="8">12V PSU</text>
+            <text x="720" y="513" text-anchor="middle" class="comp-sub">External Power</text>
+            <text x="720" y="524" text-anchor="middle" class="comp-sub">Supply</text>
+            <circle cx="660" cy="500" r="3.5" fill="#ff4444" />
+            <circle cx="660" cy="516" r="3.5" fill="#555" />
+
+            <!-- 12V lines -->
+
+            <path d="M660,500 L640,500 L640,394 L610,394" class="wire wire-power" />
+            <path d="M660,516 L635,516 L635,410 L610,410" class="wire wire-gnd" />
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- Power Supply block — USB / VIN -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="350" y="60" width="260" height="90" rx="6" class="comp-box power" />
+            <text x="480" y="80" text-anchor="middle" class="comp-title red">POWER</text>
+            <line x1="360" y1="86" x2="600" y2="86" stroke="var(--border)" stroke-width="1" />
+            <text x="366" y="102" class="pin-label">USB-C → 5V MCU power</text>
+            <text x="366" y="118" class="pin-label">12V PSU → Valve (external)</text>
+            <text x="366" y="132" class="pin-label">3.3V out → Sensors + OLED</text>
+            <text x="366" y="144" class="pin-label">GND → Common ground</text>
+
+            <!-- MCU to power arrow -->
+
+            <line x1="480" y1="200" x2="480" y2="152" stroke="var(--dim)" stroke-width="1.5" stroke-dasharray="4,3"
+                marker-end="url(#arrow)" />
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- NOTES panel -->
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <rect x="30" y="500" width="290" height="100" rx="4" class="note-box" />
+            <text x="45" y="518" class="note-title">// NOTES</text>
+            <text x="45" y="534" class="note-text">• DS18B20 needs 4.7kΩ between DATA &amp; VCC</text>
+            <text x="45" y="548" class="note-text">• DHT22 needs 10kΩ between DATA &amp; VCC</text>
+            <text x="45" y="562" class="note-text">• MOSFET gate: 100Ω resistor recommended</text>
+            <text x="45" y="576" class="note-text">• Flyback diode across valve motor terminals</text>
+            <text x="45" y="590" class="note-text">• Dashed lines = optional OLED components</text>
+
+            <!-- Component count badge -->
+
+            <rect x="355" y="550" width="250" height="50" rx="4" class="note-box" />
+            <text x="480" y="568" text-anchor="middle" class="note-title">// GPIO MAP</text>
+            <text x="480" y="582" text-anchor="middle" class="note-text">GPIO4=DS18B20 GPIO15=DHT22 GPIO19=PWM</text>
+            <text x="480" y="594" text-anchor="middle" class="note-text">GPIO21=SDA GPIO22=SCL (I2C OLED)</text>
+
+        </svg>
+    </div>
+
+</body>
+
+</html>
